@@ -2,21 +2,25 @@ import sys
 import traceback
 from PyQt5 import QtWidgets, uic, QtCore
 from lib import attack
+from time import sleep
 
-# Back up the reference to the exceptionhook
+# CONSTANTS
+polling_interval = 3
+ui_file = "lib/interface.ui"
+
+# For debug purposes since pyQT does not display exception details [
 sys._excepthook = sys.excepthook
 
-def custom_exception_hook(exctype, value, traceback):
-    # Print the error and traceback
-    print(exctype, value, traceback)
-    # Call the normal Exception hook after
-    sys._excepthook(exctype, value, traceback)
+
+def custom_exception_hook(exctype, value, tracebk):
+    print(exctype, value, tracebk)
+    sys._excepthook(exctype, value, tracebk)
     sys.exit(1)
 
-# Set the exception hook to our wrapping function
 sys.excepthook = custom_exception_hook
 
 
+# Thread execution
 class WorkerSignals(QtCore.QObject):
     finished = QtCore.pyqtSignal()
     error = QtCore.pyqtSignal(tuple)
@@ -27,19 +31,12 @@ class WorkerSignals(QtCore.QObject):
 class Worker(QtCore.QRunnable):
     def __init__(self, fn, *args):
         super(Worker, self).__init__()
-
-        # Store constructor arguments (re-used for processing)
         self.fn = fn
         self.args = args
         self.signals = WorkerSignals()
 
     @QtCore.pyqtSlot()
     def run(self):
-        '''
-        Initialise the runner function with passed args, kwargs.
-        '''
-
-        # Retrieve args/kwargs here; and fire processing using them
         try:
             result = self.fn(*self.args)
         except:
@@ -52,6 +49,7 @@ class Worker(QtCore.QRunnable):
             self.signals.finished.emit()  # Done
 
 
+# GUI
 class Ui(QtWidgets.QFrame):
     def show_log(self, message):
         self.log_browser.insertPlainText(message)
@@ -71,10 +69,21 @@ class Ui(QtWidgets.QFrame):
         self.show_log("[DONE]\n")
         eval("self." + button_name + ".setEnabled(True)")
 
-    def status_update(self, plc, hmi):
-        self.label_statusvalue.setText(attack.plc_status_check(self.get_plc_ip()))
-        self.label_statusvalue_2.setText(hmi)
-        # self.show_log("Blink")
+    def status_update(self):
+        worker1 = Worker(self.status_plc)
+        self.threadpool.start(worker1)
+        worker2 = Worker(self.status_hmi)
+        self.threadpool.start(worker2)
+
+    def status_plc(self):
+        while True:
+            self.label_statusvalue.setText(attack.plc_status_check(self.get_plc_ip()))
+            sleep(polling_interval)
+
+    def status_hmi(self):
+        while True:
+            self.label_statusvalue_2.setText(self.get_hmi_ip())
+            sleep(polling_interval)
 
     def moddisable(self, target):
         button_name = "pushbutton_moddisable"
@@ -84,7 +93,6 @@ class Ui(QtWidgets.QFrame):
         worker.signals.result.connect(self.print_output)
         worker.signals.finished.connect(lambda: self.thread_complete(button_name))
         self.threadpool.start(worker)
-
 
     def moddisrupt(self, target):
         button_name = "pushbutton_moddisrupt"
@@ -172,19 +180,18 @@ class Ui(QtWidgets.QFrame):
         self.threadpool.start(worker)
 
     def cve_4(self, target):
-        #button_name = "pushbutton_cve_4"
-        #self.pushbutton_cve_4.setEnabled(False)
         self.show_log("Check [" + target + "]")
+
+    def stop_thread(self):
+        self.threadpool.globalInstance().waitForDone()
+        self.threadpool.deleteLater()
 
     def __init__(self):
         super(Ui, self).__init__()
-        uic.loadUi("lib/interface.ui", self)
+        uic.loadUi(ui_file, self)
         self.threadpool = QtCore.QThreadPool()
-        self.timer = QtCore.QTimer(self)
-        self.timer.start()
-        self.timer.setInterval(3000)
+        self.status_update()
 
-        self.timer.timeout.connect(lambda: self.status_update(self.get_plc_ip(), self.get_hmi_ip()))
         self.pushbutton_moddisable.clicked.connect(lambda: self.moddisable(self.get_plc_ip()))
         self.pushbutton_moddisrupt.clicked.connect(lambda: self.moddisrupt(self.get_plc_ip()))
         self.pushbutton_modrestore.clicked.connect(lambda: self.modrestore(self.get_plc_ip()))
@@ -197,12 +204,15 @@ class Ui(QtWidgets.QFrame):
         self.pushbutton_cve_3.clicked.connect(lambda: self.cve_3(self.get_plc_ip()))
         self.pushbutton_cve_4.clicked.connect(lambda: self.cve_4(self.get_hmi_ip()))
 
-        self.show()
+    def closeEvent(self, event):
+        self.stop_thread()
+        sys.exit(0)
 
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     window = Ui()
+    window.show()
     try:
         sys.exit(app.exec_())
     except:
