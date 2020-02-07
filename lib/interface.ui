@@ -403,6 +403,19 @@
           </property>
           <layout class="QHBoxLayout" name="horizontalLayout">
            <item>
+            <widget class="QPushButton" name="pushbutton_cve_1">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>CVE 2015-5374</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QPushButton" name="pushbutton_cve_2">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -425,19 +438,6 @@
              </property>
              <property name="text">
               <string>CVE 2011-3486</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="pushbutton_cve_1">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>CVE 2015-5374</string>
              </property>
             </widget>
            </item>
@@ -646,7 +646,7 @@
               <item>
                <widget class="QLabel" name="label_statusvalue_2">
                 <property name="text">
-                 <string>Not available</string>
+                 <string>Offline</string>
                 </property>
                </widget>
               </item>
@@ -684,7 +684,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>CVE 2015-5374</string>
+              <string>CVE 2019-0708</string>
              </property>
             </widget>
            </item>
