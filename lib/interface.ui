@@ -2,11 +2,14 @@
 <ui version="4.0">
  <class>Form</class>
  <widget class="QWidget" name="Form">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>488</width>
+    <width>480</width>
     <height>770</height>
    </rect>
   </property>
@@ -42,7 +45,7 @@
       </property>
       <property name="minimumSize">
        <size>
-        <width>470</width>
+        <width>462</width>
         <height>512</height>
        </size>
       </property>
