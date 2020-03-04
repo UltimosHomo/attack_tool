@@ -1,13 +1,14 @@
 import sys
 import traceback
 import os
-from PyQt5 import QtWidgets, uic, QtCore
+from PyQt5 import QtWidgets, uic, QtCore, QtGui
 from lib import attack, bluekeep
 from time import sleep
 
 # CONSTANTS
 polling_interval = 3
 ui_file = "lib/interface.ui"
+icon_file = "lib/icon.png"
 
 # For debug purposes since pyQT does not display exception details [
 sys._excepthook = sys.excepthook
@@ -17,6 +18,7 @@ def custom_exception_hook(exctype, value, tracebk):
     print(exctype, value, tracebk)
     sys._excepthook(exctype, value, tracebk)
     sys.exit(1)
+
 
 sys.excepthook = custom_exception_hook
 
@@ -72,9 +74,14 @@ class Ui(QtWidgets.QFrame):
     def print_output(self, message):
         self.show_log(message)
 
-    def thread_complete(self, button_name):
+    def buttons_disable(self):
+        for button in self.buttons:
+            eval("self." + button + ".setEnabled(False)")
+
+    def thread_complete(self):
         self.show_log("[DONE]\n")
-        eval("self." + button_name + ".setEnabled(True)")
+        for button in self.buttons:
+            eval("self." + button + ".setEnabled(True)")
 
     def status_update(self):
         worker1 = Worker(self.status_plc)
@@ -95,119 +102,123 @@ class Ui(QtWidgets.QFrame):
         print("HMI status polling stopped")
 
     def moddisable(self, target):
-        button_name = "pushbutton_moddisable"
-        self.pushbutton_moddisable.setEnabled(False)
+        self.buttons_disable()
         self.show_log("Executing PLC control disabling attack. Target [" + target + "]...")
-        worker = Worker(attack.mb_stop, self.get_plc_ip())
+        worker = Worker(attack.mb_stop, target)
         worker.signals.result.connect(self.print_output)
-        worker.signals.finished.connect(lambda: self.thread_complete(button_name))
+        worker.signals.finished.connect(lambda: self.thread_complete())
         self.threadpool.start(worker)
 
     def moddisrupt(self, target):
-        button_name = "pushbutton_moddisrupt"
-        self.pushbutton_moddisrupt.setEnabled(False)
+        self.buttons_disable()
         self.show_log("Executing PLC operation disruption attack. Target [" + target + "]...")
-        worker = Worker(attack.mb_disrupt, self.get_plc_ip())
+        worker = Worker(attack.mb_disrupt, target)
         worker.signals.result.connect(self.print_output)
-        worker.signals.finished.connect(lambda: self.thread_complete(button_name))
+        worker.signals.finished.connect(lambda: self.thread_complete())
         self.threadpool.start(worker)
 
     def modrestore(self, target):
-        button_name = "pushbutton_modrestore"
-        self.pushbutton_modrestore.setEnabled(False)
+        self.buttons_disable()
         self.show_log("Restoring PLC operation of target[" + target + "]...")
-        worker = Worker(attack.mb_restore, self.get_plc_ip())
+        worker = Worker(attack.mb_restore, target)
         worker.signals.result.connect(self.print_output)
-        worker.signals.finished.connect(lambda: self.thread_complete(button_name))
+        worker.signals.finished.connect(lambda: self.thread_complete())
         self.threadpool.start(worker)
 
     def tcpsyn(self, target):
-        button_name = "pushbutton_tcpsyn"
-        self.pushbutton_tcpsyn.setEnabled(False)
+        self.buttons_disable()
         self.show_log("Performing TCP Syn scan of target[" + target + "]")
-        worker = Worker(attack.dos_syn, self.get_plc_ip())
+        worker = Worker(attack.dos_syn, target)
         worker.signals.result.connect(self.print_output)
-        worker.signals.finished.connect(lambda: self.thread_complete(button_name))
+        worker.signals.finished.connect(lambda: self.thread_complete())
         self.threadpool.start(worker)
 
     def tcpxmas(self, target):
-        button_name = "pushbutton_tcpxmas"
-        self.pushbutton_tcpxmas.setEnabled(False)
+        self.buttons_disable()
         self.show_log("Performing TCP Xmas scan of target[" + target + "]")
-        worker = Worker(attack.dos_xmas, self.get_plc_ip())
+        worker = Worker(attack.dos_xmas, target)
         worker.signals.result.connect(self.print_output)
-        worker.signals.finished.connect(lambda: self.thread_complete(button_name))
+        worker.signals.finished.connect(lambda: self.thread_complete())
         self.threadpool.start(worker)
 
     def eicar(self, target):
-        button_name = "pushbutton_eicar"
-        self.pushbutton_eicar.setEnabled(False)
+        self.buttons_disable()
         self.show_log("Sending EICAR malware test packet to target[" + target + "]...")
-        self.show_log(attack.malware_eicar(self.get_plc_ip()))
-        worker = Worker(attack.malware_eicar, self.get_plc_ip())
+        worker = Worker(attack.malware_eicar, target)
         worker.signals.result.connect(self.print_output)
-        worker.signals.finished.connect(lambda: self.thread_complete(button_name))
+        worker.signals.finished.connect(lambda: self.thread_complete())
         self.threadpool.start(worker)
 
     def passwd(self, target):
-        button_name = "pushbutton_passwd"
-        self.pushbutton_passwd.setEnabled(False)
+        self.buttons_disable()
         self.show_log("Trying to retrieve password information from target[" + target + "]...")
-        worker = Worker(attack.malware_passwd, self.get_plc_ip())
+        worker = Worker(attack.malware_passwd, target)
         worker.signals.result.connect(self.print_output)
-        worker.signals.finished.connect(lambda: self.thread_complete(button_name))
+        worker.signals.finished.connect(lambda: self.thread_complete())
         self.threadpool.start(worker)
 
     def cve_1(self, target):
-        button_name = "pushbutton_cve_1"
-        self.pushbutton_cve_1.setEnabled(False)
+        self.buttons_disable()
         self.show_log("Exploiting CVE-2015-5374 Siemens SIPROTEC 4 and SIPROTEC Compact EN100 Ethernet Module < V4.25 -"
                       " Denial of Service. Target [" + target + "]")
-        worker = Worker(attack.cve_2015_5374, self.get_plc_ip())
+        worker = Worker(attack.cve_2015_5374, target)
         worker.signals.result.connect(self.print_output)
-        worker.signals.finished.connect(lambda: self.thread_complete(button_name))
+        worker.signals.finished.connect(lambda: self.thread_complete())
         self.threadpool.start(worker)
 
     def cve_2(self, target):
-        button_name = "pushbutton_cve_2"
-        self.pushbutton_cve_2.setEnabled(False)
+        self.buttons_disable()
         self.show_log("Exploiting CVE-2014-0750 GE Proficy CIMPLICITY HMI - Remote Code Execution. "
                       "Target [" + target + "]")
-        worker = Worker(attack.cve_2014_0750, self.get_plc_ip())
+        worker = Worker(attack.cve_2014_0750, target)
         worker.signals.result.connect(self.print_output)
-        worker.signals.finished.connect(lambda: self.thread_complete(button_name))
+        worker.signals.finished.connect(lambda: self.thread_complete())
         self.threadpool.start(worker)
 
     def cve_3(self, target):
-        button_name = "pushbutton_cve_3"
-        self.pushbutton_cve_3.setEnabled(False)
+        self.buttons_disable()
         self.show_log("Exploiting CVE-2011-3486 Beckhoff TwinCAT PLC 2.11.0.2004 - Denial of Service. "
                       "Target [" + target + "]")
-        worker = Worker(attack.cve_2011_3486, self.get_plc_ip())
+        worker = Worker(attack.cve_2011_3486, target)
         worker.signals.result.connect(self.print_output)
-        worker.signals.finished.connect(lambda: self.thread_complete(button_name))
+        worker.signals.finished.connect(lambda: self.thread_complete())
         self.threadpool.start(worker)
 
     def cve_4(self, target):
-        button_name = "pushbutton_cve_4"
-        self.pushbutton_cve_4.setEnabled(False)
+        self.buttons_disable()
         self.show_log("Exploiting CVE-2019-0708 BlueKeep RDP vunlnerability "
                       "Target [" + target + "]")
-        worker = Worker(bluekeep.cve_2019_0708, self.get_hmi_ip())
+        worker = Worker(bluekeep.cve_2019_0708, target)
         worker.signals.result.connect(self.print_output)
-        worker.signals.finished.connect(lambda: self.thread_complete(button_name))
+        worker.signals.finished.connect(lambda: self.thread_complete())
         self.threadpool.start(worker)
 
     def stop_thread(self):
         self.threadpool.globalInstance().waitForDone()
         self.threadpool.deleteLater()
 
-
     def __init__(self):
         super(Ui, self).__init__()
         uic.loadUi(ui_file, self)
+        self.setWindowIcon(QtGui.QIcon(icon_file))
+        self.buttons = ["pushbutton_moddisable",
+                        "pushbutton_moddisrupt",
+                        "pushbutton_modrestore",
+                        "pushbutton_tcpsyn",
+                        "pushbutton_tcpsyn_2",
+                        "pushbutton_tcpxmas",
+                        "pushbutton_tcpxmas_2",
+                        "pushbutton_eicar",
+                        "pushbutton_eicar_2",
+                        "pushbutton_passwd",
+                        "pushbutton_passwd_2",
+                        "pushbutton_cve_1",
+                        "pushbutton_cve_2",
+                        "pushbutton_cve_3",
+                        "pushbutton_cve_4"]
         self.exit_flag = False
         self.threadpool = QtCore.QThreadPool()
+        self.threadpool.setMaxThreadCount(3)
         self.status_update()
 
         self.pushbutton_moddisable.clicked.connect(lambda: self.moddisable(self.get_plc_ip()))
@@ -215,8 +226,12 @@ class Ui(QtWidgets.QFrame):
         self.pushbutton_modrestore.clicked.connect(lambda: self.modrestore(self.get_plc_ip()))
         self.pushbutton_tcpsyn.clicked.connect(lambda: self.tcpsyn(self.get_plc_ip()))
         self.pushbutton_tcpxmas.clicked.connect(lambda: self.tcpxmas(self.get_plc_ip()))
+        self.pushbutton_tcpsyn_2.clicked.connect(lambda: self.tcpsyn(self.get_hmi_ip()))
+        self.pushbutton_tcpxmas_2.clicked.connect(lambda: self.tcpxmas(self.get_hmi_ip()))
         self.pushbutton_eicar.clicked.connect(lambda: self.eicar(self.get_plc_ip()))
         self.pushbutton_passwd.clicked.connect(lambda: self.passwd(self.get_plc_ip()))
+        self.pushbutton_eicar_2.clicked.connect(lambda: self.eicar(self.get_hmi_ip()))
+        self.pushbutton_passwd_2.clicked.connect(lambda: self.passwd(self.get_hmi_ip()))
         self.pushbutton_cve_1.clicked.connect(lambda: self.cve_1(self.get_plc_ip()))
         self.pushbutton_cve_2.clicked.connect(lambda: self.cve_2(self.get_plc_ip()))
         self.pushbutton_cve_3.clicked.connect(lambda: self.cve_3(self.get_plc_ip()))

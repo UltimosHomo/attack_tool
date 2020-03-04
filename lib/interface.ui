@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>480</width>
+    <width>460</width>
     <height>770</height>
    </rect>
   </property>
@@ -38,14 +38,14 @@
      </property>
      <widget class="QTabWidget" name="tabWidget">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
       <property name="minimumSize">
        <size>
-        <width>462</width>
+        <width>442</width>
         <height>512</height>
        </size>
       </property>
@@ -53,6 +53,12 @@
        <number>0</number>
       </property>
       <widget class="QWidget" name="tab_plc">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <attribute name="title">
         <string>PLC</string>
        </attribute>
@@ -95,7 +101,7 @@
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>70</width>
+                  <width>65</width>
                   <height>50</height>
                  </size>
                 </property>
@@ -128,7 +134,7 @@
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>70</width>
+                  <width>65</width>
                   <height>50</height>
                  </size>
                 </property>
@@ -161,7 +167,7 @@
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>70</width>
+                  <width>65</width>
                   <height>50</height>
                  </size>
                 </property>
@@ -194,7 +200,7 @@
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>70</width>
+                  <width>65</width>
                   <height>50</height>
                  </size>
                 </property>
@@ -290,7 +296,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>Disable control</string>
+              <string>Disable</string>
              </property>
             </widget>
            </item>
@@ -303,7 +309,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>Disrupt operation</string>
+              <string>Disrupt</string>
              </property>
             </widget>
            </item>
@@ -414,7 +420,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>CVE 2015-5374</string>
+              <string>2015-5374</string>
              </property>
             </widget>
            </item>
@@ -427,7 +433,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>CVE 2014-0750</string>
+              <string>2014-0750</string>
              </property>
             </widget>
            </item>
@@ -440,7 +446,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>CVE 2011-3486</string>
+              <string>2011-3486</string>
              </property>
             </widget>
            </item>
@@ -492,7 +498,7 @@
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>70</width>
+                  <width>65</width>
                   <height>50</height>
                  </size>
                 </property>
@@ -525,7 +531,7 @@
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>70</width>
+                  <width>65</width>
                   <height>50</height>
                  </size>
                 </property>
@@ -558,7 +564,7 @@
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>70</width>
+                  <width>65</width>
                   <height>50</height>
                  </size>
                 </property>
@@ -591,7 +597,7 @@
                 </property>
                 <property name="minimumSize">
                  <size>
-                  <width>70</width>
+                  <width>65</width>
                   <height>50</height>
                  </size>
                 </property>
@@ -673,6 +679,76 @@
          </widget>
         </item>
         <item>
+         <widget class="QGroupBox" name="group_dos_2">
+          <property name="title">
+           <string>Scanning</string>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_10">
+           <item>
+            <widget class="QPushButton" name="pushbutton_tcpsyn_2">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>TCP SYN scan</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushbutton_tcpxmas_2">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>TCP Xmas scan</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="group_malware_2">
+          <property name="title">
+           <string>Malware</string>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_11">
+           <item>
+            <widget class="QPushButton" name="pushbutton_eicar_2">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>EICAR test</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushbutton_passwd_2">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Steal password</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
          <widget class="QGroupBox" name="group_cve_2">
           <property name="title">
            <string>CVE exploits</string>
@@ -687,31 +763,11 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>CVE 2019-0708</string>
+              <string>2019-0708</string>
              </property>
             </widget>
            </item>
           </layout>
-         </widget>
-        </item>
-        <item>
-         <widget class="QFrame" name="frame_2">
-          <property name="frameShape">
-           <enum>QFrame::StyledPanel</enum>
-          </property>
-          <property name="frameShadow">
-           <enum>QFrame::Raised</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QFrame" name="frame_4">
-          <property name="frameShape">
-           <enum>QFrame::StyledPanel</enum>
-          </property>
-          <property name="frameShadow">
-           <enum>QFrame::Raised</enum>
-          </property>
          </widget>
         </item>
         <item>
