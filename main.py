@@ -10,7 +10,7 @@ polling_interval = 3
 ui_file = "lib/interface.ui"
 icon_file = "lib/icon.png"
 
-# For debug purposes since pyQT does not display exception details [
+# For debug purposes since pyQT does not display exception details
 sys._excepthook = sys.excepthook
 
 
@@ -67,21 +67,28 @@ class Ui(QtWidgets.QFrame):
 
     def ping(self, ip):
         if os.system("ping -n 1 -w 1 " + ip) == 0:
+            self.hmi_online = True
             return "Online"
         else:
+            self.hmi_online = False
             return "Offline"
+        self.buttons_enable(True)
 
     def print_output(self, message):
         self.show_log(message)
 
-    def buttons_disable(self):
-        for button in self.buttons:
-            eval("self." + button + ".setEnabled(False)")
+    def buttons_enable(self, status):
+        for button in self.buttons_plc:
+            eval("self." + button + ".setEnabled(" + str(status & self.plc_online & ~self.scan_running) + ")")
+        for button in self.buttons_hmi:
+            eval("self." + button + ".setEnabled(" + str(status & self.hmi_online & ~self.scan_running) + ")")
 
     def thread_complete(self):
-        self.show_log("[DONE]\n")
-        for button in self.buttons:
-            eval("self." + button + ".setEnabled(True)")
+        self.show_log("...[DONE]\n\n")
+        self.textcursor.setPosition(0)
+        self.log_browser.setTextCursor(self.textcursor)
+        self.scan_running = False
+        self.buttons_enable(True)
 
     def status_update(self):
         worker1 = Worker(self.status_plc)
@@ -91,7 +98,13 @@ class Ui(QtWidgets.QFrame):
 
     def status_plc(self):
         while not self.exit_flag:
-            self.label_statusvalue.setText(attack.plc_status_check(self.get_plc_ip()))
+            result = attack.plc_status_check(self.get_plc_ip())
+            if result == "No connection":
+                self.plc_online = False
+            else:
+                self.plc_online = True
+            self.buttons_enable(True)
+            self.label_statusvalue.setText(result)
             sleep(polling_interval)
         print("PLC status polling stopped")
 
@@ -102,92 +115,103 @@ class Ui(QtWidgets.QFrame):
         print("HMI status polling stopped")
 
     def moddisable(self, target):
-        self.buttons_disable()
-        self.show_log("Executing PLC control disabling attack. Target [" + target + "]...")
+        self.scan_running = True
+        self.buttons_enable(False)
+        self.show_log("* Executing PLC control disabling attack. Target [" + target + "]...\n")
         worker = Worker(attack.mb_stop, target)
         worker.signals.result.connect(self.print_output)
         worker.signals.finished.connect(lambda: self.thread_complete())
         self.threadpool.start(worker)
 
     def moddisrupt(self, target):
-        self.buttons_disable()
-        self.show_log("Executing PLC operation disruption attack. Target [" + target + "]...")
+        self.scan_running = True
+        self.buttons_enable(False)
+        self.show_log("* Executing PLC operation disruption attack. Target [" + target + "]...\n")
         worker = Worker(attack.mb_disrupt, target)
         worker.signals.result.connect(self.print_output)
         worker.signals.finished.connect(lambda: self.thread_complete())
         self.threadpool.start(worker)
 
     def modrestore(self, target):
-        self.buttons_disable()
-        self.show_log("Restoring PLC operation of target[" + target + "]...")
+        self.scan_running = True
+        self.buttons_enable(False)
+        self.show_log("* Restoring PLC operation of target[" + target + "]...\n")
         worker = Worker(attack.mb_restore, target)
         worker.signals.result.connect(self.print_output)
         worker.signals.finished.connect(lambda: self.thread_complete())
         self.threadpool.start(worker)
 
     def tcpsyn(self, target):
-        self.buttons_disable()
-        self.show_log("Performing TCP Syn scan of target[" + target + "]")
+        self.scan_running = True
+        self.buttons_enable(False)
+        self.show_log("* Performing TCP Syn scan of target[" + target + "]...\n")
         worker = Worker(attack.dos_syn, target)
         worker.signals.result.connect(self.print_output)
         worker.signals.finished.connect(lambda: self.thread_complete())
         self.threadpool.start(worker)
 
     def tcpxmas(self, target):
-        self.buttons_disable()
-        self.show_log("Performing TCP Xmas scan of target[" + target + "]")
+        self.scan_running = True
+        self.buttons_enable(False)
+        self.show_log("* Performing TCP Xmas scan of target[" + target + "]...\n")
         worker = Worker(attack.dos_xmas, target)
         worker.signals.result.connect(self.print_output)
         worker.signals.finished.connect(lambda: self.thread_complete())
         self.threadpool.start(worker)
 
     def eicar(self, target):
-        self.buttons_disable()
-        self.show_log("Sending EICAR malware test packet to target[" + target + "]...")
+        self.scan_running = True
+        self.buttons_enable(False)
+        self.show_log("* Sending EICAR malware test packet to target[" + target + "]...\n")
         worker = Worker(attack.malware_eicar, target)
         worker.signals.result.connect(self.print_output)
         worker.signals.finished.connect(lambda: self.thread_complete())
         self.threadpool.start(worker)
 
     def passwd(self, target):
-        self.buttons_disable()
-        self.show_log("Trying to retrieve password information from target[" + target + "]...")
+        self.scan_running = True
+        self.buttons_enable(False)
+        self.show_log("* Trying to retrieve password information from target[" + target + "]...\n")
         worker = Worker(attack.malware_passwd, target)
         worker.signals.result.connect(self.print_output)
         worker.signals.finished.connect(lambda: self.thread_complete())
         self.threadpool.start(worker)
 
     def cve_1(self, target):
-        self.buttons_disable()
-        self.show_log("Exploiting CVE-2015-5374 Siemens SIPROTEC 4 and SIPROTEC Compact EN100 Ethernet Module < V4.25 -"
-                      " Denial of Service. Target [" + target + "]")
+        self.scan_running = True
+        self.buttons_enable(False)
+        self.show_log("* Exploiting CVE-2015-5374 Siemens SIPROTEC 4 and SIPROTEC Compact EN100 Ethernet Module < V4.25"
+                      " - Denial of Service. Target [" + target + "]...\n")
         worker = Worker(attack.cve_2015_5374, target)
         worker.signals.result.connect(self.print_output)
         worker.signals.finished.connect(lambda: self.thread_complete())
         self.threadpool.start(worker)
 
     def cve_2(self, target):
-        self.buttons_disable()
-        self.show_log("Exploiting CVE-2014-0750 GE Proficy CIMPLICITY HMI - Remote Code Execution. "
-                      "Target [" + target + "]")
+        self.scan_running = True
+        self.buttons_enable(False)
+        self.show_log("* Exploiting CVE-2014-0750 GE Proficy CIMPLICITY HMI - Remote Code Execution. "
+                      "Target [" + target + "]...\n")
         worker = Worker(attack.cve_2014_0750, target)
         worker.signals.result.connect(self.print_output)
         worker.signals.finished.connect(lambda: self.thread_complete())
         self.threadpool.start(worker)
 
     def cve_3(self, target):
-        self.buttons_disable()
-        self.show_log("Exploiting CVE-2011-3486 Beckhoff TwinCAT PLC 2.11.0.2004 - Denial of Service. "
-                      "Target [" + target + "]")
+        self.scan_running = True
+        self.buttons_enable(False)
+        self.show_log("* Exploiting CVE-2011-3486 Beckhoff TwinCAT PLC 2.11.0.2004 - Denial of Service. "
+                      "Target [" + target + "]...\n")
         worker = Worker(attack.cve_2011_3486, target)
         worker.signals.result.connect(self.print_output)
         worker.signals.finished.connect(lambda: self.thread_complete())
         self.threadpool.start(worker)
 
     def cve_4(self, target):
-        self.buttons_disable()
-        self.show_log("Exploiting CVE-2019-0708 BlueKeep RDP vunlnerability "
-                      "Target [" + target + "]")
+        self.scan_running = True
+        self.buttons_enable(False)
+        self.show_log("* Exploiting CVE-2019-0708 BlueKeep RDP vunlnerability "
+                      "Target [" + target + "]...\n")
         worker = Worker(bluekeep.cve_2019_0708, target)
         worker.signals.result.connect(self.print_output)
         worker.signals.finished.connect(lambda: self.thread_complete())
@@ -200,23 +224,28 @@ class Ui(QtWidgets.QFrame):
     def __init__(self):
         super(Ui, self).__init__()
         uic.loadUi(ui_file, self)
+        self.textcursor = QtGui.QTextCursor(self.log_browser.document())
         self.setWindowIcon(QtGui.QIcon(icon_file))
-        self.buttons = ["pushbutton_moddisable",
-                        "pushbutton_moddisrupt",
-                        "pushbutton_modrestore",
-                        "pushbutton_tcpsyn",
-                        "pushbutton_tcpsyn_2",
-                        "pushbutton_tcpxmas",
-                        "pushbutton_tcpxmas_2",
-                        "pushbutton_eicar",
-                        "pushbutton_eicar_2",
-                        "pushbutton_passwd",
-                        "pushbutton_passwd_2",
-                        "pushbutton_cve_1",
-                        "pushbutton_cve_2",
-                        "pushbutton_cve_3",
-                        "pushbutton_cve_4"]
+        self.buttons_plc = ["pushbutton_moddisable",
+                            "pushbutton_moddisrupt",
+                            "pushbutton_modrestore",
+                            "pushbutton_tcpsyn",
+                            "pushbutton_eicar",
+                            "pushbutton_tcpxmas",
+                            "pushbutton_passwd",
+                            "pushbutton_cve_1",
+                            "pushbutton_cve_2",
+                            "pushbutton_cve_3"]
+        self.buttons_hmi = ["pushbutton_tcpsyn_2",
+                            "pushbutton_tcpxmas_2",
+                            "pushbutton_eicar_2",
+                            "pushbutton_passwd_2",
+                            "pushbutton_cve_4"]
         self.exit_flag = False
+        self.plc_online = False
+        self.hmi_online = False
+        self.scan_running = False
+        self.buttons_enable(True)
         self.threadpool = QtCore.QThreadPool()
         self.threadpool.setMaxThreadCount(3)
         self.status_update()
